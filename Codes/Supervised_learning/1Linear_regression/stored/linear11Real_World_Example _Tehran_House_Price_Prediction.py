@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 
 
-file_path = './AI/Codes/Supervised_learning/1Linear_regression/leaner_regression/housePrice.xlsx'
+file_path = '/home/alireza/Documents/STUDY/AI/DataSets/housePrice.xlsx'
 df = pd.read_excel(file_path)
 
 #Show and describe datas
