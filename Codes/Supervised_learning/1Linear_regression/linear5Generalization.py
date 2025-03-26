@@ -29,16 +29,16 @@ lambdas = np.round(np.exp(ln_lambdas), decimals=3)  # Convert to lambda values w
 # Print the relationship between ln(lambda) and lambda
 print("\nRelationship between ln(lambda) and lambda values:")
 for ln_lambda, lambda_val in zip(ln_lambdas, lambdas):
-    print(f"ln(lambda) = {ln_lambda:6.2f} → lambda = {lambda_val:10.8f}")
+    print(f"ln(lambda) = {ln_lambda:6.2f} → lambda = {lambda_val:10.3f}")
 
 print("\nFormulas with actual lambda values:")
 print("Ridge Loss = Σ(yi - ŷi)² + λΣwj²")
 for lambda_val in lambdas:
-    print(f"When λ = {lambda_val:10.8f}: Loss = Σ(yi - ŷi)² + {lambda_val:10.8f}Σwj²")
+    print(f"When λ = {lambda_val:10.8f}: Loss = Σ(yi - ŷi)² + {lambda_val:10.3f}Σwj²")
 
 print("\nLasso Loss = Σ(yi - ŷi)² + λΣ|wj|")
 for lambda_val in lambdas:
-    print(f"When λ = {lambda_val:10.8f}: Loss = Σ(yi - ŷi)² + {lambda_val:10.8f}Σ|wj|")
+    print(f"When λ = {lambda_val:10.8f}: Loss = Σ(yi - ŷi)² + {lambda_val:10.3f}Σ|wj|")
 
 # Initialize arrays to store RMSE values
 ridge_rmse_train = np.zeros((len(degrees), len(lambdas)))
@@ -46,10 +46,13 @@ ridge_rmse_test = np.zeros((len(degrees), len(lambdas)))
 lasso_rmse_train = np.zeros((len(degrees), len(lambdas)))
 lasso_rmse_test = np.zeros((len(degrees), len(lambdas)))
 
+
+first_place = 0.05
+
 # Loop through each polynomial degree
 for degree_idx, degree in enumerate(degrees):
     # Create subplots for each lambda value
-    fig, axs = plt.subplots(1, 5, figsize=(18, 6))
+    fig, axs = plt.subplots(1, 5, figsize=(18, 10))
     
     # Loop through each lambda value
     for lambda_idx, lambda_val in enumerate(lambdas):
@@ -88,15 +91,31 @@ for degree_idx, degree in enumerate(degrees):
         ax.scatter(X_test, y_test, color='green', label='Test Data')
         ax.plot(X_plot, y_plot_ridge, color='red', label=f'Ridge (λ={lambda_val})')
         ax.plot(X_plot, y_plot_lasso, color='orange', linestyle='--', label=f'Lasso (λ={lambda_val})')
-        ax.set_title(f'Polynomial Degree {degree}, λ={lambda_val}\nRidge Train RMSE={ridge_rmse_train[degree_idx, lambda_idx]:.2f}, Test RMSE={ridge_rmse_test[degree_idx, lambda_idx]:.2f}\nLasso Train RMSE={lasso_rmse_train[degree_idx, lambda_idx]:.2f}, Test RMSE={lasso_rmse_test[degree_idx, lambda_idx]:.2f}')
+        
+        # Format weights for display
+        ridge_weights = np.round(ridge_model.coef_, 3)
+        lasso_weights = np.round(lasso_model.coef_, 3)
+        
+        # Create weight strings with W0, W1, etc.
+        ridge_weight_str = "Ridge weights:\n" + "\n".join([f"W{i} = {w}" for i, w in enumerate(ridge_weights)])
+        lasso_weight_str = "Lasso weights:\n" + "\n".join([f"W{i} = {w}" for i, w in enumerate(lasso_weights)])
+        
+        ax.set_title(f'Polynomial Degree {degree}, λ={lambda_val}\nRidge Train RMSE={ridge_rmse_train[degree_idx, lambda_idx]:.2f}, \nTest RMSE={ridge_rmse_test[degree_idx, lambda_idx]:.2f}\nLasso Train RMSE={lasso_rmse_train[degree_idx, lambda_idx]:.2f}, \nTest RMSE={lasso_rmse_test[degree_idx, lambda_idx]:.2f}')
+        
+        # Add text below the plot
+        plt.figtext(first_place, 0.1, ridge_weight_str, fontsize=6, ha='left')
+        plt.figtext(first_place + 0.04, 0.1, lasso_weight_str, fontsize=6, ha='left')
+        first_place += 0.2
+
         ax.set_xlabel('X')
         ax.set_ylabel('y')
         ax.legend()
 
     plt.suptitle(f'Polynomial Degree {degree} - Effect of Lambda (Regularization Strength)')
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.tight_layout(rect=[0, 0, 1, 0.85])  # Adjust rect to make room for weights at bottom
     plt.show()
-
+    first_place = 0.05
+    
 # Create summary plots comparing RMSE across different lambdas
 fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(18, 10))
 
@@ -135,7 +154,6 @@ axes[1][1].set_ylabel('RMSE')
 axes[1][1].set_title('Lasso Regression: Test RMSE vs ln(Lambda)')
 axes[1][1].legend()
 axes[1][1].grid(True)
-
 
 plt.tight_layout()
 plt.show()
